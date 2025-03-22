@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Message Generator</title>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    :root {
+        --accent-color: #4183D7;
+        --background-color: linear-gradient(135deg, #FF8CBA 0%, #BDB9E8 100%);
+        --light-background: #333;
+        --text-color: #F8F8F8;
+        --chatbox-color: #555;
+    }
+    body {
+        font-family: sans-serif;
+        background: var(--background-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+        color: var(--text-color);
+    }
+    .container {
+        display: flex;
+        flex-direction: column;
+        background-color: #2E2E2E;
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
+        height: 80vh;
+        max-height: 80%;
+        width: 100%;
+        max-width: 500px;
+        padding: 40px;
+        animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        margin: 20px;
+        color: var(--accent-color);
+    }
+    .avatar {
+        background-color: var(--accent-color);
+        align-self: center;
+        padding: 5px;
+        width: 50px;
+        border-radius: 50%;
+        animation: pulseAvatar 1.5s infinite;
+    }
+    @keyframes pulseAvatar {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+    .header h2 {
+        margin-left: 20px;
+        margin-right: auto;
+        font-size: 2em;
+        color: var(--accent-color);
+    }
+    .chat {
+        background-color: var(--chatbox-color);
+        height: 100%;
+        padding: 10px;
+        border-radius: 20px;
+        overflow-y: auto;
+    }
+    .message {
+        font-size: 16px;
+        line-height: 25px;
+        width: fit-content;
+        text-align: center;
+        max-width: 450px;
+        margin: 20px 10px;
+        border-radius: 20px;
+    }
+    .message.joke {
+        background-color: var(--accent-color);
+        color: #fff;
+        border-top-left-radius: 0px;
+        padding: 20px;
+    }
+    .message.response {
+        background-color: #eee;
+        border-top-right-radius: 0px;
+        margin-left: auto;
+        padding-right: 30px;
+        color: #000;
+    }
+    .btn-container {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .btn {
+        background-color: var(--accent-color);
+        color: #fff;
+        font-family: inherit;
+        border: 0;
+        border-radius: 30px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .btn:hover {
+        background-color: blue;
+    }
+</style>
+<body>
+    <div class="container">
+        <div class="header">
+            <img class="avatar" src="Robot.jpg" alt="Robot Image">
+            <h2>Robot</h2>
+        </div>
+        <div id="_chat" class="chat"></div>
+        <div class="btn-container">
+            <button id="jokeBtn" class="btn">Tell me a Joke?</button>
+            <button id="funnyBtn" class="btn">Funny Response</button>
+        </div>
+    </div>
+    <script>
+        const chat = document.getElementById("_chat");
+        const jokeBtn = document.getElementById("jokeBtn");
+        const funnyBtn = document.getElementById("funnyBtn");
+
+        // Fetch and display a joke
+        jokeBtn.addEventListener("click", async () => {
+            await fetchMessage("https://icanhazdadjoke.com", "Tell me a joke", "joke");
+        });
+
+        // Fetch and display a funny response with an emoji level
+        funnyBtn.addEventListener("click", async () => {
+            const funnyApiUrl = "https://api.chucknorris.io/jokes/random"; // Example API
+            await fetchMessage(funnyApiUrl, "Funny Response!", "funny", addEmojiLevel);
+        });
+
+        // Fetch API and display results
+        async function fetchMessage(url, userMessage, messageType, transformResponse = null) {
+            const userElement = createMessageElement(userMessage, "response");
+            appendMessage(userElement);
+
+            const loadingElement = createMessageElement("Loading...", messageType);
+            appendMessage(loadingElement);
+
+            try {
+                const response = await fetch(url, { headers: { Accept: "application/json" } });
+                const data = await response.json();
+                const result = transformResponse ? transformResponse(data.value) : data.joke || data.value;
+                loadingElement.innerHTML = result;
+            } catch (error) {
+                loadingElement.innerHTML = "Oops! Something went wrong.";
+            }
+        }
+
+        // Transform response to include an emoji level
+        function addEmojiLevel(funnyText) {
+            const emojis = ["😂", "😆", "🤣", "😜", "🙃"];
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            return `${funnyText} ${randomEmoji}`;
+        }
+
+        // Create a message element
+        function createMessageElement(content, type) {
+            const element = document.createElement("div");
+            element.classList.add("message", type || "joke");
+            if (content) element.innerHTML = content;
+            return element;
+        }
+
+        // Append a message to the chat and scroll to the bottom
+        function appendMessage(element) {
+            chat.appendChild(element);
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
